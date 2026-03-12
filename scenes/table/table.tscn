@@ -68,3 +68,13 @@ grow_vertical = 2
 
 [node name="RoomManager" type="Node" parent="." unique_id=132678411]
 script = ExtResource("2_room")
+
+[node name="Button" type="Button" parent="." unique_id=403712765]
+layout_mode = 0
+offset_left = 1204.0
+offset_top = 687.0
+offset_right = 1276.0
+offset_bottom = 718.0
+text = "我要验牌"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

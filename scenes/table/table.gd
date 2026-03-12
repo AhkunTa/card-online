@@ -58,6 +58,7 @@ var player_count: int = 8
 # 绑定 RoomManager，连接发牌信号
 func bind_room(room: Node) -> void:
 	room.card_dealt.connect(_on_card_dealt)
+	room.card_revealed.connect(_on_card_revealed)
 
 func _ready() -> void:
 	setup_table(player_count)
@@ -71,24 +72,39 @@ const CARD_OFFSET_SELF     := Vector2(100, 0)  # 自己的牌
 const CARD_OFFSET_OPPONENT := Vector2(30, 0)   # 对手的牌，紧凑叠放
 
 # 收到一张牌：移除一个占位 ColorRect，插入真实 Card 节点并设置偏移
-func _on_card_dealt(seat_index: int, card_string: String, is_local: bool) -> void:
+# 收到一张牌：card_id 存入 Card 节点 meta，客户端不持有牌面数据
+func _on_card_dealt(seat_index: int, card_id: String, is_local: bool) -> void:
 	var card_row := get_card_row(seat_index)
 	if card_row == null:
 		return
-	# 已有的真实 Card 数量 = 当前 card_index
 	var card_index := card_row.get_children().filter(func(c): return c is Card).size()
 	for child in card_row.get_children():
 		if child is ColorRect:
 			child.queue_free()
 			break
 	var card: Card = CARD_SCENE.instantiate()
+	card.set_meta("card_id", card_id)
 	card_row.add_child(card)
 	var offset := CARD_OFFSET_SELF if is_local else CARD_OFFSET_OPPONENT
 	card.position = offset * card_index
 	if is_local:
-		card.set_card(int(card_string.split("-")[2]))
+		($RoomManager as RoomManager).request_reveal(card_id, 0)
 	else:
 		card.set_back()
+
+# 收到翻牌结果：找到对应 card_id 的 Card 节点并显示牌面
+func _on_card_revealed(card_id: String, frame_index: int) -> void:
+	for seat_index in seat_panels.keys():
+		var card_row := get_card_row(seat_index)
+		if card_row == null:
+			continue
+		for child in card_row.get_children():
+			if child is Card and child.get_meta("card_id", "") == card_id:
+				child.set_card(frame_index)
+				return
+
+func _on_button_pressed() -> void:
+	($RoomManager as RoomManager).request_reveal_all()
 
 func setup_table(count: int) -> void:
 	player_count = clamp(count, 2, 8)
