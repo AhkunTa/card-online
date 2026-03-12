@@ -160,7 +160,13 @@ func _get_panel_slot(panel: Node) -> Slot:
 
 func _make_player_panel(player_name: String, is_self: bool) -> PanelContainer:
 	var panel := PanelContainer.new()
+	# 面板内边距
+	panel.add_theme_constant_override("margin_left", 20)
+	panel.add_theme_constant_override("margin_right", 20)
+	panel.add_theme_constant_override("margin_top", 20)
+	panel.add_theme_constant_override("margin_bottom", 20)
 	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
 	panel.add_child(vbox)
 
 	var name_label := Label.new()
@@ -183,5 +189,5 @@ func _make_player_panel(player_name: String, is_self: bool) -> PanelContainer:
 			placeholder.position = Vector2(18, 0) * i
 		card_row.add_child(placeholder)
 
-	panel.custom_minimum_size = Vector2(300, 140) if is_self else Vector2(160, 90)
+	panel.custom_minimum_size = Vector2(300, 160) if is_self else Vector2(200, 110)
 	return panel
