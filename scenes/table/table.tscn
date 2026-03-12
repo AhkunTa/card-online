@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dgjg8y65sydcx"]
 
 [ext_resource type="Script" uid="uid://g6wv6abarkv" path="res://scenes/table/table.gd" id="1_table"]
+[ext_resource type="Script" path="res://utils/room_manager.gd" id="2_room"]
 
 [node name="Table" type="Control" unique_id=806185598]
 layout_mode = 3
@@ -59,3 +60,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="RoomManager" type="Node" parent="."]
+script = ExtResource("2_room")

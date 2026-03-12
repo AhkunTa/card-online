@@ -1,58 +1,47 @@
 extends Control
 
+const CARD_SCENE := preload("res://scenes/card/card.tscn")
+
 # 顺时针座位槽位，seat 0 = 当前用户（底部），顺时针递增
+# 视觉顺时针（屏幕坐标）: 底 -> 左下 -> 左上 -> 上左 -> 上中 -> 上右 -> 右上 -> 右下
 # 视觉布局:
-#       [5]  [4]  [3]
-#  [6]                [2]
-#  [7]                [1]
+#       [3]  [4]  [5]
+#  [2]                [6]
+#  [1]                [7]
 #       [0 - 你]
-#
-# 顺时针: 0(底) -> 1(右下) -> 2(右上) -> 3(上右) -> 4(上中) -> 5(上左) -> 6(左上) -> 7(左下)
 
 enum Slot {
-	BOTTOM   = 0,  # 当前用户，固定在底部
-	RIGHT_1  = 1,  # 右侧下
-	RIGHT_2  = 2,  # 右侧上
-	TOP_RIGHT = 3, # 上方右
-	TOP_MID  = 4,  # 上方中
-	TOP_LEFT = 5,  # 上方左
-	LEFT_2   = 6,  # 左侧上
-	LEFT_1   = 7,  # 左侧下
+	BOTTOM    = 0,  # 当前用户，固定在底部
+	LEFT_1    = 1,  # 左侧下
+	LEFT_2    = 2,  # 左侧上
+	TOP_LEFT  = 3,  # 上方左
+	TOP_MID   = 4,  # 上方中
+	TOP_RIGHT = 5,  # 上方右
+	RIGHT_2   = 6,  # 右侧上
+	RIGHT_1   = 7,  # 右侧下
 }
-
-# 顺时针完整序列（seat_index 0~7 对应的槽位）
-const CLOCKWISE_SLOTS: Array = [
-	Slot.BOTTOM,
-	Slot.RIGHT_1,
-	Slot.RIGHT_2,
-	Slot.TOP_RIGHT,
-	Slot.TOP_MID,
-	Slot.TOP_LEFT,
-	Slot.LEFT_2,
-	Slot.LEFT_1,
-]
 
 # 各人数启用的槽位（顺时针顺序，含 BOTTOM）
 const PLAYER_SLOT_MAP = {
 	2: [Slot.BOTTOM, Slot.TOP_MID],
-	3: [Slot.BOTTOM, Slot.RIGHT_1, Slot.TOP_LEFT],
-	4: [Slot.BOTTOM, Slot.RIGHT_1, Slot.TOP_MID, Slot.LEFT_1],
-	5: [Slot.BOTTOM, Slot.RIGHT_1, Slot.TOP_RIGHT, Slot.TOP_LEFT, Slot.LEFT_1],
-	6: [Slot.BOTTOM, Slot.RIGHT_1, Slot.TOP_RIGHT, Slot.TOP_MID, Slot.TOP_LEFT, Slot.LEFT_1],
-	7: [Slot.BOTTOM, Slot.RIGHT_1, Slot.RIGHT_2, Slot.TOP_RIGHT, Slot.TOP_LEFT, Slot.LEFT_2, Slot.LEFT_1],
-	8: [Slot.BOTTOM, Slot.RIGHT_1, Slot.RIGHT_2, Slot.TOP_RIGHT, Slot.TOP_MID, Slot.TOP_LEFT, Slot.LEFT_2, Slot.LEFT_1],
+	3: [Slot.BOTTOM, Slot.LEFT_1, Slot.TOP_RIGHT],
+	4: [Slot.BOTTOM, Slot.LEFT_1, Slot.TOP_MID, Slot.RIGHT_1],
+	5: [Slot.BOTTOM, Slot.LEFT_1, Slot.TOP_LEFT, Slot.TOP_RIGHT, Slot.RIGHT_1],
+	6: [Slot.BOTTOM, Slot.LEFT_1, Slot.TOP_LEFT, Slot.TOP_MID, Slot.TOP_RIGHT, Slot.RIGHT_1],
+	7: [Slot.BOTTOM, Slot.LEFT_1, Slot.LEFT_2, Slot.TOP_LEFT, Slot.TOP_RIGHT, Slot.RIGHT_2, Slot.RIGHT_1],
+	8: [Slot.BOTTOM, Slot.LEFT_1, Slot.LEFT_2, Slot.TOP_LEFT, Slot.TOP_MID, Slot.TOP_RIGHT, Slot.RIGHT_2, Slot.RIGHT_1],
 }
 
 # 槽位 -> 所属区域容器名
 const SLOT_AREA = {
 	Slot.BOTTOM:    "BottomArea",
-	Slot.RIGHT_1:   "RightArea",
-	Slot.RIGHT_2:   "RightArea",
-	Slot.TOP_RIGHT: "TopArea",
-	Slot.TOP_MID:   "TopArea",
-	Slot.TOP_LEFT:  "TopArea",
-	Slot.LEFT_2:    "LeftArea",
 	Slot.LEFT_1:    "LeftArea",
+	Slot.LEFT_2:    "LeftArea",
+	Slot.TOP_LEFT:  "TopArea",
+	Slot.TOP_MID:   "TopArea",
+	Slot.TOP_RIGHT: "TopArea",
+	Slot.RIGHT_2:   "RightArea",
+	Slot.RIGHT_1:   "RightArea",
 }
 
 @onready var top_area: HBoxContainer    = %TopArea
@@ -60,16 +49,39 @@ const SLOT_AREA = {
 @onready var right_area: VBoxContainer  = %RightArea
 @onready var bottom_player_area: HBoxContainer = %BottomPlayerArea
 
-# seat_index -> PanelContainer，供发牌逻辑使用
+# seat_index -> PanelContainer
 var seat_panels: Dictionary = {}
 
 # 总人数（含自己），范围 2~8
 var player_count: int = 4
 
+# 绑定 RoomManager，连接发牌信号
+func bind_room(room: Node) -> void:
+	room.card_dealt.connect(_on_card_dealt)
+
 func _ready() -> void:
 	setup_table(player_count)
+	var room := $RoomManager as RoomManager
+	room.players = player_count
+	bind_room(room)
+	room.start_game()
 
-# 根据人数初始化牌桌，返回 seat_panels 供外部发牌使用
+# 收到一张牌：移除一个占位 ColorRect，插入真实 Card 节点
+func _on_card_dealt(seat_index: int, card_string: String, is_local: bool) -> void:
+	var card_row := get_card_row(seat_index)
+	if card_row == null:
+		return
+	for child in card_row.get_children():
+		if child is ColorRect:
+			child.queue_free()
+			break
+	var card: Card = CARD_SCENE.instantiate()
+	card_row.add_child(card)
+	if is_local:
+		card.set_card(int(card_string.split("-")[2]))
+	else:
+		card.set_back()
+
 func setup_table(count: int) -> void:
 	player_count = clamp(count, 2, 8)
 	seat_panels.clear()
@@ -103,17 +115,16 @@ func _clear_areas() -> void:
 func _add_to_area(slot: Slot, panel: PanelContainer) -> void:
 	match SLOT_AREA[slot]:
 		"TopArea":
-			# 上方区域：TOP_LEFT=左, TOP_MID=中, TOP_RIGHT=右，按槽位值排序插入
 			var insert_pos := _top_area_insert_pos(slot)
 			top_area.add_child(panel)
 			top_area.move_child(panel, insert_pos)
 		"RightArea":
-			# 右侧：RIGHT_1 在下，RIGHT_2 在上 -> 先加的在下，后加的 move 到前面
+			# RIGHT_2 在上，RIGHT_1 在下
 			right_area.add_child(panel)
 			if slot == Slot.RIGHT_2:
 				right_area.move_child(panel, 0)
 		"LeftArea":
-			# 左侧：LEFT_2 在上，LEFT_1 在下 -> LEFT_2 先占位0，LEFT_1 追加
+			# LEFT_2 在上，LEFT_1 在下
 			left_area.add_child(panel)
 			if slot == Slot.LEFT_2:
 				left_area.move_child(panel, 0)
@@ -121,7 +132,7 @@ func _add_to_area(slot: Slot, panel: PanelContainer) -> void:
 			bottom_player_area.add_child(panel)
 
 func _top_area_insert_pos(slot: Slot) -> int:
-	# 上方从左到右: TOP_LEFT(5) < TOP_MID(4) < TOP_RIGHT(3)，按视觉位置排
+	# 上方从左到右: TOP_LEFT < TOP_MID < TOP_RIGHT
 	const TOP_ORDER = [Slot.TOP_LEFT, Slot.TOP_MID, Slot.TOP_RIGHT]
 	var pos := 0
 	for existing in top_area.get_children():
