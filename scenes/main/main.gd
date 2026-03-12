@@ -12,6 +12,6 @@ func _ready():
 	for card_string in get_3_cards:
 		var card_index := card_string.split('-')[2]
 		var card_instance = CARD_PRELOAD.instantiate()
+		bottom_player_area.add_child(card_instance)
 		card_instance.set_card(int(card_index))
-		card_instance.position = card_instance.position + Vector2(100 * get_3_cards.find(card_string), 0)
-		add_child(card_instance)
+		card_instance.position = card_instance.position + Vector2(200 * get_3_cards.find(card_string), 0)

@@ -13,4 +13,4 @@ scale = Vector2(3, 3)
 texture = ExtResource("1_qnn7r")
 hframes = 15
 vframes = 5
-frame = 57
+frame = 60

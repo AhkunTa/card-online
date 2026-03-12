@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://dgjg8y65sydcx"]
+
+[ext_resource type="Script" uid="uid://g6wv6abarkv" path="res://scenes/table/table.gd" id="1_table"]
+
+[node name="Table" type="Control" unique_id=806185598]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_table")
+
+[node name="TopArea" type="HBoxContainer" parent="." unique_id=953914905]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="LeftArea" type="VBoxContainer" parent="." unique_id=1001310697]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 180.0
+grow_vertical = 2
+alignment = 1
+
+[node name="RightArea" type="VBoxContainer" parent="." unique_id=1586885304]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -180.0
+grow_vertical = 2
+alignment = 1
+
+[node name="BottomPlayerArea" type="HBoxContainer" parent="." unique_id=1282498277]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -160.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="CenterArea" type="Control" parent="." unique_id=1741689131]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
