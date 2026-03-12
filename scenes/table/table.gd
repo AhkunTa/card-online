@@ -53,7 +53,7 @@ const SLOT_AREA = {
 var seat_panels: Dictionary = {}
 
 # 总人数（含自己），范围 2~8
-var player_count: int = 4
+var player_count: int = 8
 
 # 绑定 RoomManager，连接发牌信号
 func bind_room(room: Node) -> void:
@@ -66,17 +66,25 @@ func _ready() -> void:
 	bind_room(room)
 	room.start_game()
 
-# 收到一张牌：移除一个占位 ColorRect，插入真实 Card 节点
+# 牌的偏移量（每张牌相对前一张的偏移）
+const CARD_OFFSET_SELF     := Vector2(100, 0)  # 自己的牌
+const CARD_OFFSET_OPPONENT := Vector2(30, 0)   # 对手的牌，紧凑叠放
+
+# 收到一张牌：移除一个占位 ColorRect，插入真实 Card 节点并设置偏移
 func _on_card_dealt(seat_index: int, card_string: String, is_local: bool) -> void:
 	var card_row := get_card_row(seat_index)
 	if card_row == null:
 		return
+	# 已有的真实 Card 数量 = 当前 card_index
+	var card_index := card_row.get_children().filter(func(c): return c is Card).size()
 	for child in card_row.get_children():
 		if child is ColorRect:
 			child.queue_free()
 			break
 	var card: Card = CARD_SCENE.instantiate()
 	card_row.add_child(card)
+	var offset := CARD_OFFSET_SELF if is_local else CARD_OFFSET_OPPONENT
+	card.position = offset * card_index
 	if is_local:
 		card.set_card(int(card_string.split("-")[2]))
 	else:
@@ -99,12 +107,11 @@ func setup_table(count: int) -> void:
 		_add_to_area(slot, panel)
 
 # 外部发牌接口：根据 seat_index 获取对应面板的卡牌行
-func get_card_row(seat_index: int) -> HBoxContainer:
+func get_card_row(seat_index: int) -> Control:
 	if not seat_panels.has(seat_index):
 		return null
 	var panel: PanelContainer = seat_panels[seat_index]
-	# 结构: PanelContainer -> VBoxContainer -> HBoxContainer(card_row)
-	return panel.get_child(0).get_child(1) as HBoxContainer
+	return panel.get_child(0).get_child(1) as Control
 
 func _clear_areas() -> void:
 	for child in top_area.get_children():    child.queue_free()
@@ -161,14 +168,19 @@ func _make_player_panel(player_name: String, is_self: bool) -> PanelContainer:
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(name_label)
 
-	var card_row := HBoxContainer.new()
-	card_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var card_row := Control.new()
+	card_row.custom_minimum_size = Vector2(200, 96) if is_self else Vector2(120, 56)
 	vbox.add_child(card_row)
 
 	for i in range(3):
 		var placeholder := ColorRect.new()
 		placeholder.color = Color(0.2, 0.5, 0.2, 0.8)
-		placeholder.custom_minimum_size = Vector2(72, 96) if is_self else Vector2(40, 56)
+		if is_self:
+			placeholder.size = Vector2(72, 96)
+			placeholder.position = Vector2(30, -8) * i
+		else:
+			placeholder.size = Vector2(40, 56)
+			placeholder.position = Vector2(18, 0) * i
 		card_row.add_child(placeholder)
 
 	panel.custom_minimum_size = Vector2(300, 140) if is_self else Vector2(160, 90)

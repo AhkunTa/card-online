@@ -4,7 +4,7 @@ extends Node
 # 每人发牌数
 const CARDS_PER_PLAYER := 3
 # 发牌间隔（秒）
-const DEAL_INTERVAL := 1.0
+const DEAL_INTERVAL := .5
 
 # 当前玩家 seat_index（0 = 自己）
 var local_seat: int = 0

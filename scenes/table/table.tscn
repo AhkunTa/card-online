@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dgjg8y65sydcx"]
 
 [ext_resource type="Script" uid="uid://g6wv6abarkv" path="res://scenes/table/table.gd" id="1_table"]
-[ext_resource type="Script" path="res://utils/room_manager.gd" id="2_room"]
+[ext_resource type="Script" uid="uid://n06504qi5wjs" path="res://utils/room_manager.gd" id="2_room"]
 
 [node name="Table" type="Control" unique_id=806185598]
 layout_mode = 3
@@ -38,18 +38,20 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -180.0
+grow_horizontal = 0
 grow_vertical = 2
 alignment = 1
 
 [node name="BottomPlayerArea" type="HBoxContainer" parent="." unique_id=1282498277]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 300)
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -160.0
 grow_horizontal = 2
+grow_vertical = 0
 alignment = 1
 
 [node name="CenterArea" type="Control" parent="." unique_id=1741689131]
@@ -61,5 +63,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="RoomManager" type="Node" parent="."]
+[node name="RoomManager" type="Node" parent="." unique_id=132678411]
 script = ExtResource("2_room")
