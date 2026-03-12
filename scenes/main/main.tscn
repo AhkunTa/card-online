@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://b2siqmor1s582"]
+
+[ext_resource type="Script" uid="uid://cv4leqexc5s3d" path="res://scenes/main/main.gd" id="1_hyk8p"]
+
+[node name="Main" type="Node" unique_id=1441959399]
+script = ExtResource("1_hyk8p")
+
+[node name="Control" type="Control" parent="." unique_id=1190627525]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BottomPlayerArea" type="HBoxContainer" parent="Control" unique_id=1955333490]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0

@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bntnpuimfk0l8"]
+
+[ext_resource type="Script" uid="uid://bhhx003n6862x" path="res://scenes/card/card.gd" id="1_imta7"]
+[ext_resource type="Texture2D" uid="uid://dkd3drvgd3meh" path="res://assets/ui/cards.png" id="1_qnn7r"]
+
+[node name="Card" type="Node2D" unique_id=1885613277]
+script = ExtResource("1_imta7")
+
+[node name="CardSprite" type="Sprite2D" parent="." unique_id=555403775]
+unique_name_in_owner = true
+position = Vector2(72, 96)
+scale = Vector2(3, 3)
+texture = ExtResource("1_qnn7r")
+hframes = 15
+vframes = 5
+frame = 57
