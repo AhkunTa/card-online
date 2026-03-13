@@ -27,7 +27,3 @@ unique_name_in_owner = true
 [node name="CardShap" type="CollisionShape2D" parent="CardArea" unique_id=390473160]
 position = Vector2(72, 96)
 shape = SubResource("RectangleShape2D_imta7")
-
-[connection signal="input_event" from="CardArea" to="." method="_on_card_area_input_event"]
-[connection signal="mouse_entered" from="CardArea" to="." method="_on_card_area_mouse_entered"]
-[connection signal="mouse_exited" from="CardArea" to="." method="_on_card_area_mouse_exited"]

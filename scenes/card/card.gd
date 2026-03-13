@@ -11,8 +11,8 @@ var _frame_index: int = -1
 var is_face_up: bool = false
 var clickable: bool = false
 
-const BASE_SCALE   := Vector2(3.0, 3.0)
-const LIFT_Y       := -12.0
+const BASE_SCALE := Vector2(3.0, 3.0)
+const LIFT_Y := -12.0
 const TILT_ROT_MAX := 6.0
 const TILT_SCALE_X := 0.06
 
@@ -39,7 +39,7 @@ func flip() -> void:
 	if not clickable or is_face_up or _frame_index == -1:
 		return
 	set_card(_frame_index)
-	emit_signal("flipped", self)
+	emit_signal("flipped", self )
 
 # ── 坐标检测（在 Control 场景里 Area2D 不可靠，用此方法）──────
 
@@ -47,8 +47,8 @@ func _get_card_rect() -> Rect2:
 	var tex := card_sprite.texture as Texture2D
 	if tex == null:
 		return Rect2()
-	var half_w: float = tex.get_width()  / 15.0 * 0.5 * BASE_SCALE.x
-	var half_h: float = tex.get_height() / 5.0  * 0.5 * BASE_SCALE.y
+	var half_w: float = tex.get_width() / 15.0 * 0.5 * BASE_SCALE.x
+	var half_h: float = tex.get_height() / 5.0 * 0.5 * BASE_SCALE.y
 	var center := card_sprite.global_position
 	return Rect2(center.x - half_w, center.y - half_h, half_w * 2.0, half_h * 2.0)
 
@@ -75,11 +75,9 @@ func _input(event: InputEvent) -> void:
 # ── 信号处理：动画 ────────────────────────────────────────────
 
 func _on_hover_in() -> void:
-	print("hover in ", self)
 	_tween_to(_base_y + LIFT_Y)
 
 func _on_hover_out() -> void:
-	print("hover out ", self)
 	if _tween:
 		_tween.kill()
 	_tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
@@ -94,8 +92,8 @@ func _process(_delta: float) -> void:
 		return
 	var local_pos := card_sprite.to_local(get_global_mouse_position())
 	var tex := card_sprite.texture as Texture2D
-	var half_w: float = tex.get_width()  / 15.0 * 0.5
-	var half_h: float = tex.get_height() / 5.0  * 0.5
+	var half_w: float = tex.get_width() / 15.0 * 0.5
+	var half_h: float = tex.get_height() / 5.0 * 0.5
 	var nx: float = clamp(local_pos.x / half_w, -1.0, 1.0)
 	var ny: float = clamp(local_pos.y / half_h, -1.0, 1.0)
 	card_sprite.scale.x = BASE_SCALE.x * (1.0 - abs(nx) * TILT_SCALE_X)
@@ -106,11 +104,3 @@ func _tween_to(target_y: float) -> void:
 		_tween.kill()
 	_tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	_tween.tween_property(card_sprite, "position:y", target_y, 0.15)
-
-# tscn 里的 Area2D 信号保留（编辑器连接用），实际逻辑走上面
-func _on_card_area_mouse_entered() -> void:
-	pass
-func _on_card_area_mouse_exited() -> void:
-	pass
-func _on_card_area_input_event(_viewport: Node, _event: InputEvent, _shape_idx: int) -> void:
-	pass
