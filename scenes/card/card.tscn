@@ -3,8 +3,14 @@
 [ext_resource type="Script" uid="uid://bhhx003n6862x" path="res://scenes/card/card.gd" id="1_imta7"]
 [ext_resource type="Texture2D" uid="uid://dkd3drvgd3meh" path="res://assets/ui/cards.png" id="1_qnn7r"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_imta7"]
+size = Vector2(144, 192)
+
 [node name="Card" type="Node2D" unique_id=1885613277]
 script = ExtResource("1_imta7")
+
+[node name="CardAnimation" type="AnimationPlayer" parent="." unique_id=1835755277]
+root_node = NodePath("../CardSprite")
 
 [node name="CardSprite" type="Sprite2D" parent="." unique_id=555403775]
 unique_name_in_owner = true
@@ -14,3 +20,14 @@ texture = ExtResource("1_qnn7r")
 hframes = 15
 vframes = 5
 frame = 60
+
+[node name="CardArea" type="Area2D" parent="." unique_id=1213246582]
+unique_name_in_owner = true
+
+[node name="CardShap" type="CollisionShape2D" parent="CardArea" unique_id=390473160]
+position = Vector2(72, 96)
+shape = SubResource("RectangleShape2D_imta7")
+
+[connection signal="input_event" from="CardArea" to="." method="_on_card_area_input_event"]
+[connection signal="mouse_entered" from="CardArea" to="." method="_on_card_area_mouse_entered"]
+[connection signal="mouse_exited" from="CardArea" to="." method="_on_card_area_mouse_exited"]

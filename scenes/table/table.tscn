@@ -69,12 +69,39 @@ grow_vertical = 2
 [node name="RoomManager" type="Node" parent="." unique_id=132678411]
 script = ExtResource("2_room")
 
-[node name="Button" type="Button" parent="." unique_id=403712765]
-layout_mode = 0
-offset_left = 1204.0
-offset_top = 687.0
-offset_right = 1276.0
-offset_bottom = 718.0
+[node name="BottonContainer" type="HBoxContainer" parent="." unique_id=261551905]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -312.0
+offset_top = -31.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 20
+
+[node name="ButtonRise" type="Button" parent="BottonContainer" unique_id=1682607612]
+layout_mode = 2
+text = "加注"
+
+[node name="ButtonBlind" type="Button" parent="BottonContainer" unique_id=323790837]
+unique_name_in_owner = true
+layout_mode = 2
+text = "暗牌
+"
+
+[node name="ButtonShowdown" type="Button" parent="BottonContainer" unique_id=1972096970]
+layout_mode = 2
+text = "比牌"
+
+[node name="ButtonFlod" type="Button" parent="BottonContainer" unique_id=1179035109]
+layout_mode = 2
+text = "弃牌"
+
+[node name="ButtonCheck" type="Button" parent="BottonContainer" unique_id=403712765]
+layout_mode = 2
 text = "我要验牌"
 
-[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="BottonContainer/ButtonCheck" to="." method="_on_button_pressed"]

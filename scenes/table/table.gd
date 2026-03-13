@@ -48,12 +48,16 @@ const SLOT_AREA = {
 @onready var left_area: VBoxContainer   = %LeftArea
 @onready var right_area: VBoxContainer  = %RightArea
 @onready var bottom_player_area: HBoxContainer = %BottomPlayerArea
+@onready var button_blind: Button = %ButtonBlind
 
 # seat_index -> PanelContainer
 var seat_panels: Dictionary = {}
 
 # 总人数（含自己），范围 2~8
-var player_count: int = 8
+var player_count: int = 4
+
+# 本地玩家是否已翻过牌（翻过一张后禁止暗牌）
+var _local_has_flipped: bool = false
 
 # 绑定 RoomManager，连接发牌信号
 func bind_room(room: Node) -> void:
@@ -61,6 +65,9 @@ func bind_room(room: Node) -> void:
 	room.card_revealed.connect(_on_card_revealed)
 
 func _ready() -> void:
+	get_viewport().physics_object_picking = true
+	_local_has_flipped = false
+	button_blind.disabled = false
 	setup_table(player_count)
 	var room := $RoomManager as RoomManager
 	room.players = player_count
@@ -77,22 +84,21 @@ func _on_card_dealt(seat_index: int, card_id: String, is_local: bool) -> void:
 	var card_row := get_card_row(seat_index)
 	if card_row == null:
 		return
-	var card_index := card_row.get_children().filter(func(c): return c is Card).size()
-	for child in card_row.get_children():
-		if child is ColorRect:
-			child.queue_free()
-			break
+	var card_index := card_row.get_child_count()
 	var card: Card = CARD_SCENE.instantiate()
 	card.set_meta("card_id", card_id)
 	card_row.add_child(card)
 	var offset := CARD_OFFSET_SELF if is_local else CARD_OFFSET_OPPONENT
 	card.position = offset * card_index
 	if is_local:
+		card.set_back()
+		card.clickable = true
+		card.flipped.connect(_on_local_card_flipped)
 		($RoomManager as RoomManager).request_reveal(card_id, 0)
 	else:
 		card.set_back()
 
-# 收到翻牌结果：找到对应 card_id 的 Card 节点并显示牌面
+# 收到翻牌结果：本地牌只存 frame（等玩家点击翻），对手牌直接显示背面
 func _on_card_revealed(card_id: String, frame_index: int) -> void:
 	for seat_index in seat_panels.keys():
 		var card_row := get_card_row(seat_index)
@@ -100,11 +106,22 @@ func _on_card_revealed(card_id: String, frame_index: int) -> void:
 			continue
 		for child in card_row.get_children():
 			if child is Card and child.get_meta("card_id", "") == card_id:
-				child.set_card(frame_index)
+				if seat_index == 0:
+					# 本地牌：只存 frame，保持背面，等玩家点击
+					child._frame_index = frame_index
+				else:
+					child.set_card(frame_index)
 				return
 
 func _on_button_pressed() -> void:
 	($RoomManager as RoomManager).request_reveal_all()
+
+# 本地玩家翻开一张牌后：禁用 ButtonBlind，但其余牌仍可点击
+func _on_local_card_flipped(_card: Card) -> void:
+	if _local_has_flipped:
+		return
+	_local_has_flipped = true
+	button_blind.disabled = true
 
 func setup_table(count: int) -> void:
 	player_count = clamp(count, 2, 8)
@@ -122,12 +139,13 @@ func setup_table(count: int) -> void:
 		seat_panels[seat_index] = panel
 		_add_to_area(slot, panel)
 
-# 外部发牌接口：根据 seat_index 获取对应面板的卡牌行
-func get_card_row(seat_index: int) -> Control:
+# 返回 seat 对应的 Node2D 卡牌容器
+func get_card_row(seat_index: int) -> Node2D:
 	if not seat_panels.has(seat_index):
 		return null
 	var panel: PanelContainer = seat_panels[seat_index]
-	return panel.get_child(0).get_child(1) as Control
+	# panel > VBox > card_row(Control) > card_container(Node2D)
+	return panel.get_child(0).get_child(1).get_child(0) as Node2D
 
 func _clear_areas() -> void:
 	for child in top_area.get_children():    child.queue_free()
@@ -176,12 +194,13 @@ func _get_panel_slot(panel: Node) -> Slot:
 
 func _make_player_panel(player_name: String, is_self: bool) -> PanelContainer:
 	var panel := PanelContainer.new()
-	# 面板内边距
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_theme_constant_override("margin_left", 20)
 	panel.add_theme_constant_override("margin_right", 20)
 	panel.add_theme_constant_override("margin_top", 20)
 	panel.add_theme_constant_override("margin_bottom", 20)
 	var vbox := VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_theme_constant_override("separation", 4)
 	panel.add_child(vbox)
 
@@ -192,18 +211,12 @@ func _make_player_panel(player_name: String, is_self: bool) -> PanelContainer:
 
 	var card_row := Control.new()
 	card_row.custom_minimum_size = Vector2(200, 96) if is_self else Vector2(120, 56)
+	card_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(card_row)
 
-	for i in range(3):
-		var placeholder := ColorRect.new()
-		placeholder.color = Color(0.2, 0.5, 0.2, 0.8)
-		if is_self:
-			placeholder.size = Vector2(72, 96)
-			placeholder.position = Vector2(30, -8) * i
-		else:
-			placeholder.size = Vector2(40, 56)
-			placeholder.position = Vector2(18, 0) * i
-		card_row.add_child(placeholder)
+	# Node2D 容器放在 card_row 下，Card 加到这里，Area2D 信号不受 Control 拦截
+	var card_container := Node2D.new()
+	card_row.add_child(card_container)
 
 	panel.custom_minimum_size = Vector2(300, 160) if is_self else Vector2(200, 110)
 	return panel

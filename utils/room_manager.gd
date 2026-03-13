@@ -2,7 +2,7 @@ class_name RoomManager
 extends Node
 
 const CARDS_PER_PLAYER := 3
-const DEAL_INTERVAL := .5
+const DEAL_INTERVAL := .3
 
 var local_seat: int = 0
 var players: int = 4
@@ -18,6 +18,10 @@ var _card_registry: Dictionary = {}
 signal card_dealt(seat_index: int, card_id: String, is_local: bool)
 signal card_revealed(card_id: String, frame_index: int)
 signal deal_finished()
+# 服务端比牌：收集所有座位手牌，调用 CardManager 比较，返回胜者
+# 返回 { winners: Array[int], hand_ranks: Dictionary{ seat: HAND_RANK } }
+signal showdown_result(winners: Array, hand_ranks: Dictionary)
+
 
 func _ready() -> void:
 	_deal_timer = Timer.new()
@@ -96,3 +100,32 @@ func request_reveal_all() -> void:
 		var data: Dictionary = _card_registry[card_id]
 		var frame_index := int(data["card_string"].split("-")[2])
 		emit_signal("card_revealed", card_id, frame_index)
+
+
+# func request_showdown() -> void:
+# 	# 按 seat_index 聚合手牌（card_string 列表）
+# 	var seat_hands: Dictionary = {}
+# 	for card_id in _card_registry.keys():
+# 		var data: Dictionary = _card_registry[card_id]
+# 		var seat: int = data["seat_index"]
+# 		if not seat_hands.has(seat):
+# 			seat_hands[seat] = []
+# 		seat_hands[seat].append(data["card_string"])
+
+# 	# 只比已有完整手牌的座位
+# 	var valid_hands: Dictionary = {}
+# 	for seat in seat_hands.keys():
+# 		if seat_hands[seat].size() == CARDS_PER_PLAYER:
+# 			valid_hands[seat] = seat_hands[seat]
+
+# 	if valid_hands.is_empty():
+# 		return
+
+# 	var winners: Array[int] = CardManager.compare_all(valid_hands)
+# 	var hand_ranks: Dictionary = {}
+# 	for seat in valid_hands.keys():
+# 		hand_ranks[seat] = CardManager.evaluate_hand(valid_hands[seat])["rank"]
+
+# 	# 翻开所有牌再广播结果
+# 	request_reveal_all()
+# 	emit_signal("showdown_result", winners, hand_ranks)
